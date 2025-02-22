@@ -34,6 +34,18 @@ jobs:
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           echo "VERSION_LABEL=shopping-frontend-${TIMESTAMP}" >> $GITHUB_ENV
+          echo "S3_BUCKET=your-elasticbeanstalk-bucket-name" >> $GITHUB_ENV
+
+      - name: Upload Dockerrun.aws.json to S3
+        run: |
+          aws s3 cp Dockerrun.aws.json s3://$S3_BUCKET/shopping-frontend-${VERSION_LABEL}.json
+
+      - name: Create new Elastic Beanstalk application version
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name shopping-react-app \
+            --version-label $VERSION_LABEL \
+            --source-bundle S3Bucket=$S3_BUCKET,S3Key=shopping-frontend-${VERSION_LABEL}.json
 
       - name: Deploy to Elastic Beanstalk
         run: |
