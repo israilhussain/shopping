@@ -28,13 +28,17 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}  # Change this to your AWS region
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Generate new deployment version
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           echo "VERSION_LABEL=shopping-frontend-${TIMESTAMP}" >> $GITHUB_ENV
-          echo "S3_BUCKET=your-elasticbeanstalk-bucket-name" >> $GITHUB_ENV
+
+      - name: Get Elastic Beanstalk S3 Bucket
+        run: |
+          EB_BUCKET=$(aws elasticbeanstalk describe-application-versions --application-name shopping-react-app --query "ApplicationVersions[0].SourceBundle.S3Bucket" --output text)
+          echo "S3_BUCKET=$EB_BUCKET" >> $GITHUB_ENV
 
       - name: Upload Dockerrun.aws.json to S3
         run: |
