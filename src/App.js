@@ -1,13 +1,11 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+import ProductContainer from "./components/ProductContainer";
 
 function App() {
   return (
     <div className="App">
-      <div>
-        <h1>Hello Shopping</h1>
-        <p>Let's Enjoy Shopping</p>
-      </div>
+      <h3 className="mt-3 mb-5">Welcome to Shopping App</h3>
+      <ProductContainer />
     </div>
   );
 }
