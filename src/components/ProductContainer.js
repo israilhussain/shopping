@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ProductList from "./ProductList";
-const BASE_URL = "http://fastapi-backend.us-east-1.elasticbeanstalk.com"
+const BASE_URL = "http://fastapi-backend.us-east-1.elasticbeanstalk.com";
 
 const ProductContainer = () => {
   const [data, setData] = useState([]);
@@ -10,10 +10,14 @@ const ProductContainer = () => {
   useEffect(() => {
     const getProducts = async () => {
       setLoading(true);
-      const response = await fetch(`${BASE_URL}/products/`);
-      if (componentMounted) {
-        setData(await response.json());
-        setLoading(false);
+      try {
+        const response = await fetch(`${BASE_URL}/products/`);
+        if (componentMounted) {
+          setData(await response.json());
+          setLoading(false);
+        }
+      } catch (error) {
+        console.log(error)
       }
 
       return () => {
