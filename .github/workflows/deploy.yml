@@ -84,7 +84,7 @@ jobs:
 
       - name: Verify EB Application Version
         run: |
-          aws elasticbeanstalk describe-application-versions --application-name shopping-frontend
+          aws elasticbeanstalk describe-application-versions --application-name shopping-react
 
       - name: Deploy to Elastic Beanstalk
         run: |
