@@ -35,7 +35,7 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/shopping-frontend:$DOCKER_TAG
 
       - name: Install Node.js and AWS SDK v3
-        uses: actions/setup-node@v18
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
 
