@@ -3,8 +3,8 @@ name: Deploy React Frontend with Docker
 on:
   push:
     branches:
-      - main  # Deploys to Production
-      - staging  # Deploys to Staging
+      - main
+      - staging
 
 jobs:
   deploy:
@@ -31,21 +31,19 @@ jobs:
 
       - name: Build and push Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/shopping-frontend:$DOCKER_TAG .
+          docker build --no-cache -t ${{ secrets.DOCKER_USERNAME }}/shopping-frontend:$DOCKER_TAG .
           docker push ${{ secrets.DOCKER_USERNAME }}/shopping-frontend:$DOCKER_TAG
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Install Node.js and AWS SDK v3
+        uses: actions/setup-node@v18
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          node-version: '18'
 
-      - name: Fetch Elastic Beanstalk S3 Bucket
-        run: |
-          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
-          S3_BUCKET="elasticbeanstalk-${{ secrets.AWS_REGION }}-${AWS_ACCOUNT_ID}"
-          echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_ENV
+      - name: Install AWS SDK v3
+        run: npm install @aws-sdk/client-elastic-beanstalk @aws-sdk/client-s3 dotenv
+
+      - name: Fetch Elastic Beanstalk S3 Bucket (Using AWS SDK v3)
+        run: node .github/scripts/get-s3-bucket.js
 
       - name: Update Dockerrun.aws.json with correct image tag
         run: |
@@ -56,20 +54,11 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           echo "VERSION_LABEL=shopping-frontend-${ENVIRONMENT}-${TIMESTAMP}" >> $GITHUB_ENV
 
-      - name: Upload Dockerrun.aws.json to S3
-        run: |
-          aws s3 cp Dockerrun.aws.json s3://$S3_BUCKET/shopping-frontend-${VERSION_LABEL}.json
+      - name: Upload Dockerrun.aws.json to S3 (Using AWS SDK v3)
+        run: node .github/scripts/upload-to-s3.js
 
-      - name: Create new Elastic Beanstalk application version
-        run: |
-          aws elasticbeanstalk create-application-version \
-            --application-name shopping-react-app \
-            --version-label $VERSION_LABEL \
-            --source-bundle S3Bucket=$S3_BUCKET,S3Key=shopping-frontend-${VERSION_LABEL}.json
+      - name: Create new Elastic Beanstalk application version (Using AWS SDK v3)
+        run: node .github/scripts/create-eb-version.js
 
-      - name: Deploy to Elastic Beanstalk
-        run: |
-          aws elasticbeanstalk update-environment \
-            --application-name shopping-react-app \
-            --environment-name $EBS_ENV \
-            --version-label $VERSION_LABEL
+      - name: Deploy to Elastic Beanstalk (Using AWS SDK v3)
+        run: node .github/scripts/deploy-eb.js
