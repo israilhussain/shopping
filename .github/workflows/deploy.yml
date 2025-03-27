@@ -34,15 +34,15 @@ jobs:
           docker build --no-cache -t ${{ secrets.DOCKER_USERNAME }}/shopping-frontend:$DOCKER_TAG .
           docker push ${{ secrets.DOCKER_USERNAME }}/shopping-frontend:$DOCKER_TAG
 
-      - name: Install Node.js and AWS SDK v3
+      - name: Set up Node.js and install dependencies
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Install AWS SDK v3
-        run: npm install @aws-sdk/client-elastic-beanstalk @aws-sdk/client-s3 dotenv
+      - name: Install AWS SDK v3 dependencies
+        run: npm install @aws-sdk/client-elastic-beanstalk @aws-sdk/client-s3 @aws-sdk/client-sts dotenv
 
-      - name: Fetch Elastic Beanstalk S3 Bucket (Using AWS SDK v3)
+      - name: Fetch Elastic Beanstalk S3 Bucket
         run: node .github/scripts/get-s3-bucket.js
 
       - name: Update Dockerrun.aws.json with correct image tag
@@ -54,11 +54,11 @@ jobs:
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           echo "VERSION_LABEL=shopping-frontend-${ENVIRONMENT}-${TIMESTAMP}" >> $GITHUB_ENV
 
-      - name: Upload Dockerrun.aws.json to S3 (Using AWS SDK v3)
+      - name: Upload Dockerrun.aws.json to S3
         run: node .github/scripts/upload-to-s3.js
 
-      - name: Create new Elastic Beanstalk application version (Using AWS SDK v3)
+      - name: Create new Elastic Beanstalk application version
         run: node .github/scripts/create-eb-version.js
 
-      - name: Deploy to Elastic Beanstalk (Using AWS SDK v3)
+      - name: Deploy to Elastic Beanstalk
         run: node .github/scripts/deploy-eb.js
