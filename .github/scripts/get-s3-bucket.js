@@ -1,5 +1,5 @@
-import { ElasticBeanstalkClient, DescribeApplicationsCommand } from "@aws-sdk/client-elastic-beanstalk";
-import { S3Client, ListBucketsCommand } from "@aws-sdk/client-s3";
+const { ElasticBeanstalkClient, DescribeApplicationsCommand } = require("@aws-sdk/client-elastic-beanstalk");
+const { S3Client, ListBucketsCommand } = require("@aws-sdk/client-s3");
 
 const region = process.env.AWS_REGION || "us-east-1"; // Ensure correct region
 
