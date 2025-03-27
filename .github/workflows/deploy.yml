@@ -26,8 +26,8 @@ jobs:
             echo "EBS_ENV=${{ secrets.EBS_ENV_STAGING }}" >> $GITHUB_ENV
           fi
 
-          - name: Set AWS Region
-          run: echo "AWS_REGION=us-east-1" >> $GITHUB_ENV  # Change to your region
+      - name: Set AWS Region
+        run: echo "AWS_REGION=us-east-1" >> $GITHUB_ENV  # Change to your region
   
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
