@@ -1,51 +1,52 @@
 const { ElasticBeanstalkClient, CreateApplicationVersionCommand } = require("@aws-sdk/client-elastic-beanstalk");
-const { S3Client, ListBucketsCommand } = require("@aws-sdk/client-s3");
+const { S3Client, HeadObjectCommand } = require("@aws-sdk/client-s3");
 
-const REGION = process.env.AWS_REGION || "us-east-1";  // Ensure AWS Region is set
-const APPLICATION_NAME = "shopping-frontend";  // Update as per your app name
-const VERSION_LABEL = process.env.VERSION_LABEL || `shopping-frontend-${Date.now()}`;
-const S3_KEY = "Dockerrun.aws.json";  // Ensure this file exists in your S3 bucket
+const region = process.env.AWS_REGION || "us-east-1";
+const bucketName = process.env.S3_BUCKET_NAME; // Ensure this is set
+const versionLabel = process.env.VERSION_LABEL;
+const appName = "shopping-frontend"; // Change this if necessary
+const key = `Dockerrun.aws.json`;
 
-const ebClient = new ElasticBeanstalkClient({ region: REGION });
-const s3Client = new S3Client({ region: REGION });
+const ebClient = new ElasticBeanstalkClient({ region });
+const s3Client = new S3Client({ region });
 
-async function getS3BucketName() {
-  try {
-    const data = await s3Client.send(new ListBucketsCommand({}));
-    const bucket = data.Buckets.find(bucket => bucket.Name.includes(APPLICATION_NAME));
-    return bucket ? bucket.Name : null;
-  } catch (error) {
-    console.error("❌ ERROR: Failed to fetch S3 bucket name:", error);
-    return null;
-  }
+async function validateS3Object() {
+    if (!bucketName) {
+        console.error("❌ ERROR: No S3 bucket found. Check your AWS setup.");
+        process.exit(1);
+    }
+
+    try {
+        console.log(`🔍 Checking if ${key} exists in ${bucketName}...`);
+        await s3Client.send(new HeadObjectCommand({ Bucket: bucketName, Key: key }));
+        console.log(`✅ Found ${key} in ${bucketName}`);
+    } catch (error) {
+        console.error(`❌ ERROR: Dockerrun.aws.json not found in ${bucketName}`);
+        process.exit(1);
+    }
 }
 
-async function createVersion() {
-  const bucketName = await getS3BucketName();
-  if (!bucketName) {
-    console.error("❌ ERROR: No S3 bucket found. Check your AWS setup.");
-    process.exit(1);
-  }
+async function createEBVersion() {
+    await validateS3Object(); // Ensure the file is there before proceeding
 
-  console.log(`📌 Creating EB version: ${VERSION_LABEL} with S3 Bucket: ${bucketName} and Key: ${S3_KEY}`);
+    try {
+        console.log(`🚀 Creating new EB application version: ${versionLabel}`);
+        const command = new CreateApplicationVersionCommand({
+            ApplicationName: appName,
+            VersionLabel: versionLabel,
+            SourceBundle: {
+                S3Bucket: bucketName,
+                S3Key: key
+            }
+        });
 
-  const params = {
-    ApplicationName: APPLICATION_NAME,
-    VersionLabel: VERSION_LABEL,
-    SourceBundle: {
-      S3Bucket: bucketName,
-      S3Key: S3_KEY,
-    },
-  };
-
-  try {
-    const command = new CreateApplicationVersionCommand(params);
-    await ebClient.send(command);
-    console.log("✅ Successfully created application version:", VERSION_LABEL);
-  } catch (error) {
-    console.error("❌ Failed to create application version:", error);
-    process.exit(1);
-  }
+        const response = await ebClient.send(command);
+        console.log(`✅ Successfully created EB version: ${versionLabel}`);
+        console.log(response);
+    } catch (error) {
+        console.error("❌ ERROR: Failed to create EB version:", error.message);
+        process.exit(1);
+    }
 }
 
-createVersion();
+createEBVersion();
