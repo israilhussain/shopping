@@ -67,9 +67,9 @@ jobs:
 
       - name: Upload Dockerrun.aws.json to S3
         run: |
-          echo "Uploading to S3 bucket: $S3_BUCKET_NAME"
-          node .github/scripts/upload-to-s3.js
-          sleep 30  # Allow AWS to process the file
+          aws s3 cp Dockerrun.aws.json s3://$S3_BUCKET_NAME/Dockerrun.aws.json
+          sleep 10  # Allow time for AWS to register the file
+          echo "✅ Uploaded Dockerrun.aws.json to S3"
 
       - name: Verify Dockerrun.aws.json in S3
         run: |
