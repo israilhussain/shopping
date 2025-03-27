@@ -1,7 +1,7 @@
 const { ElasticBeanstalkClient, DescribeApplicationVersionsCommand, UpdateEnvironmentCommand } = require("@aws-sdk/client-elastic-beanstalk");
 
 const REGION = process.env.AWS_REGION || "us-east-1";
-const APPLICATION_NAME = "shopping-frontend";
+const APPLICATION_NAME = "shopping-react";
 const EBS_ENV = process.env.EBS_ENV;  // Make sure this is set
 const VERSION_LABEL = process.env.VERSION_LABEL;
 
