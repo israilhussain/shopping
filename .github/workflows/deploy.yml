@@ -60,15 +60,24 @@ jobs:
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           echo "VERSION_LABEL=shopping-frontend-${ENVIRONMENT}-${TIMESTAMP}" >> $GITHUB_ENV
+          echo "Generated Version: $VERSION_LABEL"
 
       - name: Upload Dockerrun.aws.json to S3 (Using AWS SDK v3)
-        run: node .github/scripts/upload-to-s3.js
-             sleep 60  # Give time for the file to appear in S3
-        
+        run: |
+          node .github/scripts/upload-to-s3.js
+          sleep 30  # Wait for S3 to process the file
+          echo "Checking if Dockerrun.aws.json exists in S3..."
+          aws s3 ls s3://${{ secrets.S3_BUCKET_NAME }}/
 
       - name: Create new Elastic Beanstalk application version (Using AWS SDK v3)
-        run: node .github/scripts/create-eb-version.js
-             sleep 60  # Wait for AWS to process the version
+        run: |
+          node .github/scripts/create-eb-version.js
+          sleep 30  # Wait for AWS to register the version
+          echo "Verifying Application Version..."
+          aws elasticbeanstalk describe-application-versions --application-name shopping-frontend
 
       - name: Deploy to Elastic Beanstalk (Using AWS SDK v3)
-        run: node .github/scripts/deploy-eb.js
+        run: |
+          echo "Deploying version: $VERSION_LABEL"
+          aws elasticbeanstalk describe-application-versions --application-name shopping-frontend
+          node .github/scripts/deploy-eb.js
