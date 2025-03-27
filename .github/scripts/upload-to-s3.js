@@ -1,6 +1,6 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import fs from "fs";
 import dotenv from "dotenv";
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 dotenv.config();
 const s3 = new S3Client({ region: process.env.AWS_REGION });

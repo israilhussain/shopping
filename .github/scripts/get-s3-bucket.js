@@ -1,5 +1,5 @@
-import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
 import { writeFileSync } from "fs";
+const { STSClient, GetCallerIdentityCommand } = require("@aws-sdk/client-sts");
 
 const client = new STSClient();
 const command = new GetCallerIdentityCommand({});

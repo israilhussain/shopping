@@ -1,5 +1,5 @@
-import { ElasticBeanstalkClient, UpdateEnvironmentCommand } from "@aws-sdk/client-elastic-beanstalk";
 import dotenv from "dotenv";
+const { ElasticBeanstalkClient, UpdateEnvironmentCommand } = require("@aws-sdk/client-elastic-beanstalk");
 
 dotenv.config();
 const eb = new ElasticBeanstalkClient({ region: process.env.AWS_REGION });

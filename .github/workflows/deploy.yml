@@ -43,7 +43,7 @@ jobs:
         run: npm install @aws-sdk/client-elastic-beanstalk @aws-sdk/client-s3 dotenv
 
       - name: Fetch Elastic Beanstalk S3 Bucket (Using AWS SDK v3)
-        run: node .github/scripts/get-s3-bucket.mjs
+        run: node .github/scripts/get-s3-bucket.js
 
       - name: Update Dockerrun.aws.json with correct image tag
         run: |
@@ -55,10 +55,10 @@ jobs:
           echo "VERSION_LABEL=shopping-frontend-${ENVIRONMENT}-${TIMESTAMP}" >> $GITHUB_ENV
 
       - name: Upload Dockerrun.aws.json to S3 (Using AWS SDK v3)
-        run: node .github/scripts/upload-to-s3.mjs
+        run: node .github/scripts/upload-to-s3.js
 
       - name: Create new Elastic Beanstalk application version (Using AWS SDK v3)
-        run: node .github/scripts/create-eb-version.mjs
+        run: node .github/scripts/create-eb-version.js
 
       - name: Deploy to Elastic Beanstalk (Using AWS SDK v3)
-        run: node .github/scripts/deploy-eb.mjs
+        run: node .github/scripts/deploy-eb.js
