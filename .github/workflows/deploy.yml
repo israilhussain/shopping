@@ -49,8 +49,11 @@ jobs:
       - name: Install AWS SDK v3
         run: npm install @aws-sdk/client-elastic-beanstalk @aws-sdk/client-s3 dotenv
 
-      - name: Fetch Elastic Beanstalk S3 Bucket (Using AWS SDK v3)
-        run: node .github/scripts/get-s3-bucket.js
+      - name: Fetch Elastic Beanstalk S3 Bucket
+        run: |
+          BUCKET_NAME=$(node .github/scripts/get-s3-bucket.js)
+          echo "S3_BUCKET_NAME=$BUCKET_NAME" >> $GITHUB_ENV
+          echo "✅ Fetched S3 Bucket Name: $BUCKET_NAME"
 
       - name: Update Dockerrun.aws.json with correct image tag
         run: |
@@ -60,24 +63,30 @@ jobs:
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           echo "VERSION_LABEL=shopping-frontend-${ENVIRONMENT}-${TIMESTAMP}" >> $GITHUB_ENV
-          echo "Generated Version: $VERSION_LABEL"
+          echo "✅ Generated Version: $VERSION_LABEL"
 
-      - name: Upload Dockerrun.aws.json to S3 (Using AWS SDK v3)
+      - name: Upload Dockerrun.aws.json to S3
         run: |
+          echo "Uploading to S3 bucket: $S3_BUCKET_NAME"
           node .github/scripts/upload-to-s3.js
-          sleep 30  # Wait for S3 to process the file
-          echo "Checking if Dockerrun.aws.json exists in S3..."
-          aws s3 ls s3://${{ secrets.S3_BUCKET_NAME }}/
+          sleep 30  # Allow AWS to process the file
 
-      - name: Create new Elastic Beanstalk application version (Using AWS SDK v3)
+      - name: Verify Dockerrun.aws.json in S3
         run: |
+          echo "Checking S3 for Dockerrun.aws.json..."
+          aws s3 ls s3://$S3_BUCKET_NAME/
+
+      - name: Create new Elastic Beanstalk application version
+        run: |
+          echo "Creating EB version: $VERSION_LABEL"
           node .github/scripts/create-eb-version.js
-          sleep 30  # Wait for AWS to register the version
-          echo "Verifying Application Version..."
+          sleep 30  # Allow AWS to register the version
+
+      - name: Verify EB Application Version
+        run: |
           aws elasticbeanstalk describe-application-versions --application-name shopping-frontend
 
-      - name: Deploy to Elastic Beanstalk (Using AWS SDK v3)
+      - name: Deploy to Elastic Beanstalk
         run: |
           echo "Deploying version: $VERSION_LABEL"
-          aws elasticbeanstalk describe-application-versions --application-name shopping-frontend
           node .github/scripts/deploy-eb.js
