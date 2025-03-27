@@ -1,14 +1,25 @@
-const { writeFileSync } = require("fs");
-const { STSClient, GetCallerIdentityCommand } = require("@aws-sdk/client-sts");
+import dotenv from "dotenv";
+const { ElasticBeanstalkClient, DescribeApplicationsCommand } = require("@aws-sdk/client-elastic-beanstalk");
 
-const client = new STSClient();
-const command = new GetCallerIdentityCommand({});
+dotenv.config();
+
+const client = new ElasticBeanstalkClient({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+});
 
 (async () => {
-  const { Account } = await client.send(command);
-  const region = process.env.AWS_REGION;
-  const S3_BUCKET = `elasticbeanstalk-${region}-${Account}`;
+    try {
+        const command = new DescribeApplicationsCommand({
+            ApplicationNames: ["shopping-react"],
+        });
 
-  console.log(`S3_BUCKET=${S3_BUCKET}`);
-  writeFileSync(process.env.GITHUB_ENV, `S3_BUCKET=${S3_BUCKET}\n`, { flag: "a" });
+        const response = await client.send(command);
+        console.log("Elastic Beanstalk Application Details:", response);
+    } catch (error) {
+        console.error("Error fetching S3 bucket:", error);
+    }
 })();
