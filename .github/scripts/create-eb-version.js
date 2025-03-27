@@ -4,7 +4,7 @@ const { S3Client, HeadObjectCommand } = require("@aws-sdk/client-s3");
 const region = process.env.AWS_REGION || "us-east-1";
 const bucketName = process.env.S3_BUCKET_NAME; // Ensure this is set
 const versionLabel = process.env.VERSION_LABEL;
-const appName = "shopping-frontend"; // Change this if necessary
+const appName = "shopping-react"; // Change this if necessary
 const key = `Dockerrun.aws.json`;
 
 const ebClient = new ElasticBeanstalkClient({ region });
