@@ -63,12 +63,12 @@ jobs:
 
       - name: Upload Dockerrun.aws.json to S3 (Using AWS SDK v3)
         run: node .github/scripts/upload-to-s3.js
-             sleep 10  # Give time for the file to appear in S3
+             sleep 60  # Give time for the file to appear in S3
         
 
       - name: Create new Elastic Beanstalk application version (Using AWS SDK v3)
         run: node .github/scripts/create-eb-version.js
-             sleep 10  # Wait for AWS to process the version
+             sleep 60  # Wait for AWS to process the version
 
       - name: Deploy to Elastic Beanstalk (Using AWS SDK v3)
         run: node .github/scripts/deploy-eb.js
