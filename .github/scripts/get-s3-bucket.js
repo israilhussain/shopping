@@ -1,25 +1,28 @@
-const dotenv = require("dotenv");
 const { ElasticBeanstalkClient, DescribeApplicationsCommand } = require("@aws-sdk/client-elastic-beanstalk");
 
-dotenv.config();
+const client = new ElasticBeanstalkClient({ region: "us-east-1" });
 
-const client = new ElasticBeanstalkClient({
-    region: process.env.AWS_REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    },
-});
-
-(async () => {
+async function getS3BucketName() {
     try {
-        const command = new DescribeApplicationsCommand({
-            ApplicationNames: ["shopping-react"],
-        });
-
+        const command = new DescribeApplicationsCommand({});
         const response = await client.send(command);
-        console.log("Elastic Beanstalk Application Details:", response);
+
+        if (!response.Applications || response.Applications.length === 0) {
+            throw new Error("No applications found in Elastic Beanstalk.");
+        }
+
+        const app = response.Applications[0]; // Assuming only one application
+        const bucketName = app.ResourceLifecycleConfig?.ServiceRole; // Adjust if incorrect
+
+        if (!bucketName) {
+            throw new Error("S3 bucket name not found.");
+        }
+
+        console.log(bucketName); // ✅ This ensures the correct bucket name is returned
     } catch (error) {
-        console.error("Error fetching S3 bucket:", error);
+        console.error("❌ Error fetching S3 bucket:", error.message);
+        process.exit(1); // Ensure script fails if there's an issue
     }
-})();
+}
+
+getS3BucketName();
